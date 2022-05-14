@@ -56,6 +56,10 @@ func (l *Lexer) NextToken() token.Token {
 			currentToken.Literal = l.readIdentifier()
 			currentToken.Type = token.LookupIdent(currentToken.Literal)
 			return currentToken
+		} else if isDigit(l.ch) {
+			currentToken.Type = token.INT
+			currentToken.Literal = l.readNumber()
+			return currentToken
 		} else {
 			currentToken = newToken(token.ILLEGAL, l.ch)
 		}
@@ -69,6 +73,18 @@ func (l *Lexer) NextToken() token.Token {
 func (l *Lexer) readIdentifier() string {
 	startPosition := l.position
 	for isLetter(l.ch) {
+		l.readChar()
+	}
+
+	return l.input[startPosition:l.position]
+}
+
+/* Parses out the number */
+func (l *Lexer) readNumber() string {
+	startPosition := l.position
+
+	/* TODO: We can add things like '.' or something for floats */
+	for isDigit(l.ch) {
 		l.readChar()
 	}
 
