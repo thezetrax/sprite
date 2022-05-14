@@ -5,25 +5,12 @@ import (
 	"testing"
 )
 
-func TestNextToken_OneLine(t *testing.T) {
-	input := `=+(){},;`
+type ExpectedTokenType struct {
+	expectedType    token.TokenType
+	expectedLiteral string
+}
 
-	tests := []struct {
-		expectedType    token.TokenType
-		expectedLiteral string
-	}{
-		{token.ASSIGN, "="},
-		{token.PLUS, "+"},
-		{token.LPAREN, "("},
-		{token.RPAREN, ")"},
-		{token.LBRACE, "{"},
-		{token.RBRACE, "}"},
-		{token.COMMA, ","},
-		{token.SEMICOLON, ";"},
-	}
-
-	l := NewLexer(input)
-
+func testCorrect(t *testing.T, l *Lexer, tests []ExpectedTokenType) {
 	for i, tt := range tests {
 		tok := l.NextToken()
 
@@ -39,7 +26,25 @@ func TestNextToken_OneLine(t *testing.T) {
 	}
 }
 
-func TestNextCase_MultiLine(t *testing.T) {
+func TestNextToken_OneLine(t *testing.T) {
+	input := `=+(){},;`
+
+	tests := []ExpectedTokenType{
+		{token.ASSIGN, "="},
+		{token.PLUS, "+"},
+		{token.LPAREN, "("},
+		{token.RPAREN, ")"},
+		{token.LBRACE, "{"},
+		{token.RBRACE, "}"},
+		{token.COMMA, ","},
+		{token.SEMICOLON, ";"},
+	}
+
+	l := NewLexer(input)
+	testCorrect(t, l, tests)
+}
+
+func TestNextToken_MultiLine(t *testing.T) {
 	const input = `let five = 5;
     let ten = 10;
     
@@ -49,10 +54,7 @@ func TestNextCase_MultiLine(t *testing.T) {
     
     let result = add(five, ten);`
 
-	tests := []struct {
-		expectedType    token.TokenType
-		expectedLiteral string
-	}{
+	tests := []ExpectedTokenType{
 		{token.LET, "let"},
 		{token.IDENT, "five"},
 		{token.ASSIGN, "="},
@@ -92,23 +94,10 @@ func TestNextCase_MultiLine(t *testing.T) {
 	}
 
 	l := NewLexer(input)
-
-	for i, tt := range tests {
-		tok := l.NextToken()
-
-		if tok.Type != tt.expectedType {
-			t.Fatalf("test[%d]: TokenType wrong. expected: %q, got: %q",
-				i, tt.expectedType, tok.Type)
-		}
-
-		if tok.Literal != tt.expectedLiteral {
-			t.Fatalf("test[%d]: TokenLiteral wrong. expected: %q, got: %q",
-				i, tt.expectedLiteral, tok.Literal)
-		}
-	}
+	testCorrect(t, l, tests)
 }
 
-func TestNextLexer__Conditionals(t *testing.T) {
+func TestNextToken__Conditionals(t *testing.T) {
 	var input = `let five = 5;
         let ten = 10;
         let add = fn(x, y) {
@@ -118,10 +107,7 @@ func TestNextLexer__Conditionals(t *testing.T) {
         !-/*5;
         5 < 10 > 5;`
 
-	tests := []struct {
-		expectedType    token.TokenType
-		expectedLiteral string
-	}{
+	tests := []ExpectedTokenType{
 		{token.LET, "let"},
 		{token.IDENT, "five"},
 		{token.ASSIGN, "="},
@@ -173,18 +159,92 @@ func TestNextLexer__Conditionals(t *testing.T) {
 	}
 
 	l := NewLexer(input)
+	testCorrect(t, l, tests)
+}
 
-	for i, tt := range tests {
-		tok := l.NextToken()
+func TestNextToken__Conditionals2(t *testing.T) {
+	var input = `let five = 5;
+    let ten = 10;
+    let add = fn(x, y) {
+    x + y;
+    };
+    let result = add(five, ten);
+    !-/*5;
+    5 < 10 > 5;
+    if (5 < 10) {
+        return true;
+    } else {
+          return false;
+    }`
 
-		if tok.Type != tt.expectedType {
-			t.Fatalf("test[%d]: TokenType wrong. expected: %q, got: %q",
-				i, tt.expectedType, tok.Type)
-		}
-
-		if tok.Literal != tt.expectedLiteral {
-			t.Fatalf("test[%d]: TokenLiteral wrong. expected: %q, got: %q",
-				i, tt.expectedLiteral, tok.Literal)
-		}
+	tests := []ExpectedTokenType{
+		{token.LET, "let"},
+		{token.IDENT, "five"},
+		{token.ASSIGN, "="},
+		{token.INT, "5"},
+		{token.SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "ten"},
+		{token.ASSIGN, "="},
+		{token.INT, "10"},
+		{token.SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "add"},
+		{token.ASSIGN, "="},
+		{token.FUNCTION, "fn"},
+		{token.LPAREN, "("},
+		{token.IDENT, "x"},
+		{token.COMMA, ","},
+		{token.IDENT, "y"},
+		{token.RPAREN, ")"},
+		{token.LBRACE, "{"},
+		{token.IDENT, "x"},
+		{token.PLUS, "+"},
+		{token.IDENT, "y"},
+		{token.SEMICOLON, ";"},
+		{token.RBRACE, "}"},
+		{token.SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "result"},
+		{token.ASSIGN, "="},
+		{token.IDENT, "add"},
+		{token.LPAREN, "("},
+		{token.IDENT, "five"},
+		{token.COMMA, ","},
+		{token.IDENT, "ten"},
+		{token.RPAREN, ")"},
+		{token.SEMICOLON, ";"},
+		{token.BANG, "!"},
+		{token.MINUS, "-"},
+		{token.SLASH, "/"},
+		{token.ASTERISK, "*"},
+		{token.INT, "5"},
+		{token.SEMICOLON, ";"},
+		{token.INT, "5"},
+		{token.LT, "<"},
+		{token.INT, "10"},
+		{token.GT, ">"},
+		{token.INT, "5"},
+		{token.SEMICOLON, ";"},
+		{token.IF, "if"},
+		{token.LPAREN, "("},
+		{token.INT, "5"},
+		{token.LT, "<"},
+		{token.INT, "10"},
+		{token.RPAREN, ")"},
+		{token.LBRACE, "{"},
+		{token.RETURN, "return"},
+		{token.TRUE, "true"},
+		{token.SEMICOLON, ";"},
+		{token.RBRACE, "}"},
+		{token.ELSE, "else"},
+		{token.LBRACE, "{"},
+		{token.RETURN, "return"},
+		{token.FALSE, "false"},
+		{token.SEMICOLON, ";"},
+		{token.RBRACE, "}"},
 	}
+
+	l := NewLexer(input)
+	testCorrect(t, l, tests)
 }
