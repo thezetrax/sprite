@@ -40,7 +40,7 @@ func TestNextToken_OneLine(t *testing.T) {
 }
 
 func TestNextCase_MultiLine(t *testing.T) {
-	const expected = `let five = 5;
+	const input = `let five = 5;
     let ten = 10;
     
     let add = fn(x, y) {
@@ -89,5 +89,21 @@ func TestNextCase_MultiLine(t *testing.T) {
 		{token.RPAREN, ")"},
 		{token.SEMICOLON, ";"},
 		{token.EOF, ""},
+	}
+
+	l := NewLexer(input)
+
+	for i, tt := range tests {
+		tok := l.NextToken()
+
+		if tok.Type != tt.expectedType {
+			t.Fatalf("test[%d]: TokenType wrong. expected: %q, got: %q",
+				i, tt.expectedType, tok.Type)
+		}
+
+		if tok.Literal != tt.expectedLiteral {
+			t.Fatalf("test[%d]: TokenLiteral wrong. expected: %q, got: %q",
+				i, tt.expectedLiteral, tok.Literal)
+		}
 	}
 }

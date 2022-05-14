@@ -6,6 +6,7 @@ type Token struct {
 	Literal string
 }
 
+/* Tokens */
 const (
 	ILLEGAL = "ILLEGAL"
 	EOF     = "EOF"
@@ -31,3 +32,18 @@ const (
 	FUNCTION = "FUNCTION"
 	LET      = "LET"
 )
+
+/* Keywords */
+var keywords = map[string]TokenType{
+	"fn":  FUNCTION,
+	"let": LET,
+}
+
+/* Checks weather the identifier is a keyword, or user defined */
+func LookupIdent(ident string) TokenType {
+	if keywordToken, ok := keywords[ident]; ok {
+		return keywordToken
+	}
+
+	return IDENT
+}

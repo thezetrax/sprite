@@ -29,6 +29,8 @@ func (l *Lexer) readChar() {
 func (l *Lexer) NextToken() token.Token {
 	var currentToken token.Token
 
+	l.eatWhitespace()
+
 	switch l.ch {
 	case '=':
 		currentToken = newToken(token.ASSIGN, l.ch)
@@ -49,12 +51,35 @@ func (l *Lexer) NextToken() token.Token {
 	case 0:
 		currentToken.Literal = ""
 		currentToken.Type = token.EOF
+	default:
+		if isLetter(l.ch) {
+			currentToken.Literal = l.readIdentifier()
+			currentToken.Type = token.LookupIdent(currentToken.Literal)
+			return currentToken
+		} else {
+			currentToken = newToken(token.ILLEGAL, l.ch)
+		}
 	}
 
 	l.readChar()
 	return currentToken
 }
 
-func newToken(tokenType token.TokenType, ch byte) token.Token {
-	return token.Token{Type: tokenType, Literal: string(ch)}
+/* Parses out the identifier */
+func (l *Lexer) readIdentifier() string {
+	startPosition := l.position
+	for isLetter(l.ch) {
+		l.readChar()
+	}
+
+	return l.input[startPosition:l.position]
+}
+
+/*
+   Skip whitespace when encountered
+*/
+func (l *Lexer) eatWhitespace() {
+	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+		l.readChar()
+	}
 }
