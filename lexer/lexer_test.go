@@ -248,3 +248,45 @@ func TestNextToken__Conditionals2(t *testing.T) {
 	l := NewLexer(input)
 	testCorrect(t, l, tests)
 }
+
+func TestNextToken__LongerTokens(t *testing.T) {
+	input := `if (5 < 10) {
+        return true;
+    } else {
+          return false;
+    }
+    
+    10 == 10;
+    10 != 9;`
+
+	tests := []ExpectedTokenType{
+		{token.IF, "if"},
+		{token.LPAREN, "("},
+		{token.INT, "5"},
+		{token.LT, "<"},
+		{token.INT, "10"},
+		{token.RPAREN, ")"},
+		{token.LBRACE, "{"},
+		{token.RETURN, "return"},
+		{token.TRUE, "true"},
+		{token.SEMICOLON, ";"},
+		{token.RBRACE, "}"},
+		{token.ELSE, "else"},
+		{token.LBRACE, "{"},
+		{token.RETURN, "return"},
+		{token.FALSE, "false"},
+		{token.SEMICOLON, ";"},
+		{token.RBRACE, "}"},
+		{token.INT, "10"},
+		{token.EQ, "=="},
+		{token.INT, "10"},
+		{token.SEMICOLON, ";"},
+		{token.INT, "10"},
+		{token.NOTEQ, "!="},
+		{token.INT, "9"},
+		{token.SEMICOLON, ";"},
+	}
+
+	l := NewLexer(input)
+	testCorrect(t, l, tests)
+}
