@@ -1,3 +1,6 @@
 .vscode
-.air.conf
 .idea
+tmp
+
+# Air config
+.air.*
